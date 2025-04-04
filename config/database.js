@@ -8,7 +8,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
     else console.log('SQLite DB connected at', dbPath);
 });
 
-// Auto-create tables
 db.serialize(() => {
     db.run(`
     CREATE TABLE IF NOT EXISTS users (
