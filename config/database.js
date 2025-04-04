@@ -1,44 +1,73 @@
 const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
 const path = require('path');
 
-let db;
-(async () => {
-    db = await open({
-        filename: path.join(__dirname, '../database.sqlite'),
-        driver: sqlite3.Database
-    });
+const dbPath = process.env.DB_FILE || './myapp.db';
 
-    // Create tables if they do not exist
-    await db.exec(`
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) console.error('Failed to open SQLite DB:', err);
+    else console.log('SQLite DB connected at', dbPath);
+});
+
+// Auto-create tables
+db.serialize(() => {
+    db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
+      username TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
-      is_admin INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
+      email TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+    db.run(`
     CREATE TABLE IF NOT EXISTS api_keys (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
-      key TEXT UNIQUE NOT NULL,
-      usage_count INTEGER DEFAULT 0,
-      last_used TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      api_key TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      usage_count INTEGER NOT NULL DEFAULT 0,
+      last_used DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
-    );
-    CREATE TABLE IF NOT EXISTS usage_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      api_key_id INTEGER NOT NULL,
-      endpoint TEXT NOT NULL,
-      request_time TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (api_key_id) REFERENCES api_keys(id)
-    );
+    )
   `);
-})();
+
+    console.log("Ensured 'users' and 'api_keys' tables exist in SQLite DB.");
+});
+
+// Promise helpers
+function run(sql, params=[]) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) reject(err);
+            else resolve(this); // this.lastID, this.changes
+        });
+    });
+}
+
+function get(sql, params=[]) {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
+function all(sql, params=[]) {
+    return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
 
 module.exports = {
-    get: async (query, ...params) => db.get(query, ...params),
-    run: async (query, ...params) => db.run(query, ...params),
-    all: async (query, ...params) => db.all(query, ...params)
+    db,
+    run,
+    get,
+    all
 };
