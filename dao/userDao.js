@@ -1,4 +1,3 @@
-// dao/userDao.js
 const { run, get, all } = require('../config/database');
 
 async function createUser({ username, password, email, role }) {
