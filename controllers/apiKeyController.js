@@ -1,4 +1,3 @@
-// controllers/apiKeyController.js
 const apiKeyService = require('../services/apiKeyService');
 const { catchAsync } = require('../utils/errorHandler');
 
