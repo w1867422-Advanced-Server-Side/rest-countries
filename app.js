@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/authRoutes');
 const apiKeyRoutes = require('./routes/apiKeyRoutes');
+const countryRoutes = require('./routes/countryRoutes');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cookieParser());
 
 app.use('/auth', authRoutes);
 app.use('/apiKey', apiKeyRoutes);
+app.use('/countries', countryRoutes);
 
 app.get('/', (req, res) => {
     res.send( 'Server running on port: !' + PORT);
