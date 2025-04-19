@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { run } = require('../config/database');
 const apiKeyDao = require('../dao/apiKeyDao');
 
 function generateRandomApiKey() {
