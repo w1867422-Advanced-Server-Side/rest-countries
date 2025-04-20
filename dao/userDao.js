@@ -25,9 +25,27 @@ async function findUserById(id) {
     return await get(sql, [id]);
 }
 
+async function getAllUsers() {
+    const sql = `SELECT id, username, email, role, created_at FROM users`;
+    return await all(sql);
+}
+
+async function updateUserRole(id, role) {
+    await run(`UPDATE users SET role = ? WHERE id = ?`, [role, id]);
+    return await findUserById(id);
+}
+
+async function deleteUser(id) {
+    await run(`DELETE FROM users WHERE id = ?`, [id]);
+    return { id };
+}
+
 module.exports = {
     createUser,
     findUserByEmail,
     getUserCount,
-    findUserById
+    findUserById,
+    getAllUsers,
+    updateUserRole,
+    deleteUser
 };
