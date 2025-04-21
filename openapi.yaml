@@ -1,0 +1,455 @@
+openapi: 3.0.3
+info:
+  title: RestCountries API | w1867422
+  description: |
+    Express/SQLite backend with JWT auth, API‑key protected country endpoints, and admin management.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+security:
+  - bearerAuth: []        # default to JWT auth for most routes
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        created_at:
+          type: string
+          format: date-time
+    AuthRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    RegisterRequest:
+      allOf:
+        - $ref: '#/components/schemas/AuthRequest'
+        - type: object
+          required: [username]
+          properties:
+            username:
+              type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    APIKey:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        api_key:
+          type: string
+        active:
+          type: boolean
+        usage_count:
+          type: integer
+        last_used:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    Country:
+      type: object
+      properties:
+        name:
+          type: string
+        capital:
+          type: string
+          nullable: true
+        currencies:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              name:
+                type: string
+              symbol:
+                type: string
+        languages:
+          type: object
+          additionalProperties:
+            type: string
+        flag:
+          type: string
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Created with token & user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request / user exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/login:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Token & user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/profile:
+    get:
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Missing/invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apiKey:
+    post:
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      summary: Generate a new API key for the logged‑in user
+      responses:
+        '201':
+          description: Created API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+    get:
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      summary: Get all API keys for the logged‑in user
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+  /apiKey/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      summary: Update one of your API keys
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                api_key:
+                  type: string
+                active:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      summary: Delete one of your API keys
+      responses:
+        '200':
+          description: Deleted key ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+
+  /countries:
+    get:
+      tags: [Countries]
+      security:
+        - apiKeyAuth: []
+      summary: Fetch all countries
+      responses:
+        '200':
+          description: List of simplified country objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+        '401':
+          description: Missing/invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /countries/{name}:
+    get:
+      tags: [Countries]
+      security:
+        - apiKeyAuth: []
+      summary: Fetch countries matching a name
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+        '404':
+          description: No matches
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: List all users (admin only)
+      responses:
+        '200':
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /admin/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: Change a user’s role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [user, admin]
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: Delete a user
+      responses:
+        '200':
+          description: Deleted user ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/apiKeys:
+    get:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: List all API keys (admin only)
+      responses:
+        '200':
+          description: All API keys across users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /admin/apiKeys/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: Update any API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                api_key:
+                  type: string
+                active:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      summary: Delete any API key
+      responses:
+        '200':
+          description: Deleted key ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

@@ -3,6 +3,12 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors')
 
+const path= require('path');
+const swaggerUi   = require('swagger-ui-express');
+const YAML   = require('yamljs');
+
+const swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+
 const authRoutes = require('./routes/authRoutes');
 const apiKeyRoutes = require('./routes/apiKeyRoutes');
 const countryRoutes = require('./routes/countryRoutes');
@@ -17,6 +23,14 @@ app.use(cors({
     origin: 'http://localhost:5000',
     credentials: true
 }));
+
+app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument, {
+        explorer: true,        // allows searching
+    })
+);
 
 app.use('/auth', authRoutes);
 app.use('/apiKey', apiKeyRoutes);
