@@ -28,7 +28,7 @@ app.use(
     '/api-docs',
     swaggerUi.serve,
     swaggerUi.setup(swaggerDocument, {
-        explorer: true,        // allows searching
+        explorer: true,
     })
 );
 
