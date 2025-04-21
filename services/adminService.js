@@ -1,5 +1,4 @@
 const userDao    = require('../dao/userDao');
-const apiKeyDao  = require('../dao/apiKeyDao');
 
 async function getAllUsers() {
     return await userDao.getAllUsers();
