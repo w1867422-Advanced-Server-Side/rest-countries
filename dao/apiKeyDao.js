@@ -54,15 +54,6 @@ async function findApiKeyByValue(api_key) {
     return await get(sql, [api_key]);
 }
 
-async function getAllApiKeys() {
-    const sql = `
-    SELECT k.*, u.email AS user_email
-    FROM api_keys k
-    JOIN users u ON u.id = k.user_id
-  `;
-    return await all(sql);
-}
-
 async function logApiKeyUsage(keyId) {
     const sql = `
     UPDATE api_keys
@@ -80,6 +71,5 @@ module.exports = {
     updateApiKey,
     deleteApiKey,
     findApiKeyByValue,
-    getAllApiKeys,
     logApiKeyUsage
 };
