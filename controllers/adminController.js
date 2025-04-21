@@ -19,29 +19,8 @@ const deleteUser = catchAsync(async (req, res) => {
     res.json(result);
 });
 
-const getAllApiKeys = catchAsync(async (req, res) => {
-    const keys = await adminService.getAllApiKeys();
-    res.json(keys);
-});
-
-const updateApiKey = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
-    const updated = await adminService.updateApiKeyByAdmin(id, updates);
-    res.json(updated);
-});
-
-const deleteApiKey = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const result = await adminService.deleteApiKeyByAdmin(id);
-    res.json(result);
-});
-
 module.exports = {
     getAllUsers,
     updateUserRole,
     deleteUser,
-    getAllApiKeys,
-    updateApiKey,
-    deleteApiKey
 };

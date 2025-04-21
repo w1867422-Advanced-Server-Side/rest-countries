@@ -16,8 +16,4 @@ router.get   ('/users',       adminController.getAllUsers);
 router.put   ('/users/:id',   adminController.updateUserRole);
 router.delete('/users/:id',   adminController.deleteUser);
 
-router.get   ('/apiKeys',     adminController.getAllApiKeys);
-router.put   ('/apiKeys/:id', adminController.updateApiKey);
-router.delete('/apiKeys/:id', adminController.deleteApiKey);
-
 module.exports = router;

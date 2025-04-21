@@ -16,26 +16,8 @@ async function deleteUser(userId) {
     return { id: userId };
 }
 
-async function getAllApiKeys() {
-    return await apiKeyDao.getAllApiKeys();
-}
-
-async function updateApiKeyByAdmin(keyId, updates) {
-    const key = await apiKeyDao.getApiKeyById(keyId);
-    if (!key) throw new Error('API key not found');
-    return await apiKeyDao.updateApiKey(keyId, updates);
-}
-
-async function deleteApiKeyByAdmin(keyId) {
-    await apiKeyDao.deleteApiKey(keyId);
-    return { id: keyId };
-}
-
 module.exports = {
     getAllUsers,
     updateUserRole,
-    deleteUser,
-    getAllApiKeys,
-    updateApiKeyByAdmin,
-    deleteApiKeyByAdmin
+    deleteUser
 };
