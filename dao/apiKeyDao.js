@@ -63,6 +63,16 @@ async function getAllApiKeys() {
     return await all(sql);
 }
 
+async function logApiKeyUsage(keyId) {
+    const sql = `
+    UPDATE api_keys
+    SET usage_count = usage_count + 1,
+        last_used   = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `;
+    await run(sql, [keyId]);
+}
+
 module.exports = {
     createApiKey,
     getApiKeysByUserId,
@@ -70,5 +80,6 @@ module.exports = {
     updateApiKey,
     deleteApiKey,
     findApiKeyByValue,
-    getAllApiKeys
+    getAllApiKeys,
+    logApiKeyUsage
 };

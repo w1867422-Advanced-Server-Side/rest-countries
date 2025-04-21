@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const { run } = require('../config/database');
 const apiKeyDao = require('../dao/apiKeyDao');
 
 function generateRandomApiKey() {
@@ -30,13 +29,7 @@ async function deleteUserApiKey(user_id, keyId) {
 }
 
 async function logApiKeyUsage(keyId) {
-    const sql = `
-    UPDATE api_keys
-    SET usage_count = usage_count + 1,
-        last_used   = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `;
-    await run(sql, [keyId]);
+    return await apiKeyDao.logApiKeyUsage(keyId);
 }
 
 module.exports = {
